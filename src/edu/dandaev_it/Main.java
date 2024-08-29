@@ -13,15 +13,18 @@ public class Main {
 			System.out.println("\033[0;32mConnection established successfully!\033[0m");
 			Statement statement = connection.createStatement();
 
-			 // SQL-запрос для вставки данных
-			 String insert_into_authors_table = """
-						INSERT INTO
-							authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture) 
-						VALUES
-						 	('Mark', 'Twain', '1835-11-30', '1910-04-21', 'American', 'American writer known for The Adventures of Tom Sawyer and Adventures of Huckleberry Finn.', 'mark.twain@example.com', 'http://twain.com', 'Male', 'twain.jpg');
-						 """;
+			 // SQL-запрос для обновления данных
+			 String update_row_authors_table = """
+					update
+						authors
+					set
+						first_name = 'Aibek',
+						last_name = 'Dandaev'
+					where
+						author_id = 26;
+			 """;
 
-			statement.executeUpdate(insert_into_authors_table);
+			statement.executeUpdate(update_row_authors_table);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
