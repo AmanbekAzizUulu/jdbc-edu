@@ -2,7 +2,7 @@
 
 Пробрасывание исключений, как в нашем коде, с помощью `RuntimeException`, имеет свои плюсы и минусы. Давайте разберёмся, почему такой подход может считаться оптимизацией и в каких ситуациях он применяется.
 
-### Код
+## Код
 
 ```java
 public static Connection open() {
@@ -41,6 +41,7 @@ public static Connection open() {
 
 Итак, такой способ обработки исключений оптимизирует ваш код, делая его чище и проще, но требует осмотрительности и понимания последствий, связанных с тем, что ошибки могут не быть должным образом обработаны.
 
+---
 
 ## Скрипт для создания базы данных
 
@@ -48,8 +49,23 @@ public static Connection open() {
 
 Слудующие скрипты вставлют данные в соответствующие таблицы
 
- - `insert_into_aircraft_table`
- - `insert_into_airport_table`
- - `insert_into_flight_table`
- - `insert_into_seat_table`
- - `insert_into_ticket_table`
+- `insert_into_aircraft_table`
+- `insert_into_airport_table`
+- `insert_into_flight_table`
+- `insert_into_seat_table`
+- `insert_into_ticket_table`
+
+
+---
+
+В ходе изучения темы я буду создавать различные тематические ветки и каждая ветка будет отходить от точки initial commit
+
+
+---
+
+Colored output to console
+`\033[0m` — Сброс цвета и форматирования.
+`\033[0;31m` — Красный цвет.
+`\033[0;32m` — Зеленый цвет.
+`\033[0;33m` — Желтый цвет.
+`\033[0;34m` — Синий цвет.
