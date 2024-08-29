@@ -160,6 +160,29 @@ public class PropertiesUtil {
 
 
 ---
+В PostgreSQL можно выполнять несколько SQL-команд в одном запросе, так как он поддерживает транзакции, которые могут содержать несколько команд. Это позволяет использовать многострочные строки с несколькими командами, что может быть причиной, почему ваш код работает в PostgreSQL.
+
+Вот пример, который иллюстрирует это:
+
+```java
+String insertIntoAuthorsTable = """
+    USE literature;
+
+    INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
+    VALUES ('Mark', 'Twain', '1835-11-30', '1910-04-21', 'American', 'American writer known for The Adventures of Tom Sawyer and Adventures of Huckleberry Finn.', 'mark.twain@example.com', 'http://twain.com', 'Male', 'twain.jpg');
+
+    INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
+    VALUES ('Virginia', 'Woolf', '1882-01-25', '1941-03-28', 'British', 'English writer known for Mrs Dalloway and To the Lighthouse.', 'virginia.woolf@example.com', 'http://woolf.com', 'Female', 'woolf.jpg');
+
+    INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
+    VALUES ('Gabriel', 'Garcia Marquez', '1927-03-06', '2014-04-17', 'Colombian', 'Colombian novelist known for One Hundred Years of Solitude.', 'gabriel.garcia@example.com', 'http://garcia-marquez.com', 'Male', 'garcia.jpg');
+""";
+
+statement.execute(insertIntoAuthorsTable);
+```
+
+Однако в MySQL выполнение нескольких команд в одном запросе может быть ограничено, поэтому рекомендуется использовать отдельные вызовы `execute` для каждой команды.
+---
 
 Ваша ошибка `java.sql.SQLSyntaxErrorException` указывает на проблему в SQL-синтаксисе. В вашем коде ошибка вызвана использованием нескольких SQL-команд в одном строковом литерале, что может быть проблематичным при выполнении SQL в Java.
 
