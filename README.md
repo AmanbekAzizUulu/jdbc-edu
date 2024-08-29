@@ -69,3 +69,70 @@ Colored output to console
 `\033[0;32m` — Зеленый цвет.
 `\033[0;33m` — Желтый цвет.
 `\033[0;34m` — Синий цвет.
+
+---
+
+Давайте разберем, как работает этот код:
+
+```java
+PropertiesUtil.class.getClassLoader().getResourceAsStream("application.properties")
+```
+
+### 1. `PropertiesUtil.class`
+Этот элемент кода возвращает объект `Class`, представляющий класс `PropertiesUtil`. Используя этот объект, можно получить доступ к метаданным класса, а также к методам для работы с загрузкой ресурсов и загрузчиком классов.
+
+### 2. `getClassLoader()`
+Метод `getClassLoader()` возвращает загрузчик классов (`ClassLoader`), который загрузил данный класс. В этом случае, `PropertiesUtil.class.getClassLoader()` возвращает загрузчик классов, который загрузил класс `PropertiesUtil`.
+
+Загрузчики классов в Java ответственны за загрузку классов и ресурсов (например, файлов) в память JVM. В зависимости от среды исполнения (например, веб-сервер, десктопное приложение), могут использоваться различные загрузчики классов.
+
+### 3. `getResourceAsStream("application.properties")`
+Этот метод используется для загрузки ресурса (в данном случае файла `application.properties`) как потока ввода (`InputStream`).
+
+#### Как это работает:
+- Метод `getResourceAsStream()` ищет ресурс (например, файл) с указанным именем на пути к классам, доступном этому загрузчику классов.
+- Если ресурс найден, метод возвращает поток ввода (`InputStream`), через который можно прочитать содержимое файла.
+- Если ресурс не найден, метод возвращает `null`.
+
+### Общий механизм работы:
+
+1. **Загрузка класса:**
+   JVM загрузила класс `PropertiesUtil` с помощью определенного загрузчика классов (`ClassLoader`). Этот загрузчик классов отвечает за поиск и загрузку всех ресурсов, связанных с классом `PropertiesUtil`.
+
+2. **Поиск ресурса:**
+   Когда вызывается `getResourceAsStream("application.properties")`, загрузчик классов ищет файл `application.properties` в директориях или JAR-файлах, которые он обрабатывает. Например, если этот файл находится в корне директории `src/main/resources`, то загрузчик классов найдет его там.
+
+3. **Открытие потока:**
+   Если файл `application.properties` найден, `getResourceAsStream` возвращает поток ввода (`InputStream`), который можно использовать для чтения содержимого файла.
+
+### Пример использования:
+
+```java
+import java.io.InputStream;
+import java.util.Properties;
+
+public class PropertiesUtil {
+
+    public static Properties loadProperties() {
+        Properties properties = new Properties();
+
+        try (InputStream input = PropertiesUtil.class.getClassLoader().getResourceAsStream("application.properties")) {
+            if (input == null) {
+                System.out.println("Sorry, unable to find application.properties");
+                return null;
+            }
+
+            // load a properties file from class path, inside static method
+            properties.load(input);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return properties;
+    }
+}
+```
+
+### Краткое резюме:
+Этот код использует загрузчик классов для поиска файла `application.properties` в пути классов. Если файл найден, он возвращается в виде потока ввода, который затем можно использовать для загрузки конфигурации в объект `Properties`. Это обычная практика для работы с конфигурационными файлами, размещенными в ресурсах приложения.
