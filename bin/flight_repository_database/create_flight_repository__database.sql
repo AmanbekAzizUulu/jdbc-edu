@@ -1,4 +1,5 @@
-CREATE DATABASE flight_repository;
+-- CREATE DATABASE flight_repository; раскомментируйте эту строку кода, если хотите создать свою базу данных и работать с ней
+--									  я буду работать со своей базой данных, которая называется hibernate_tutorial_db
 
 -- airport (аэропорт)
 --         code (уникальный код аэропорта)

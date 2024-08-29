@@ -63,9 +63,12 @@ public static Connection open() {
 
 ---
 
-Colored output to console
+Colored output to console in VSCode
 `\033[0m` — Сброс цвета и форматирования.
 `\033[0;31m` — Красный цвет.
 `\033[0;32m` — Зеленый цвет.
 `\033[0;33m` — Желтый цвет.
 `\033[0;34m` — Синий цвет.
+
+---
+

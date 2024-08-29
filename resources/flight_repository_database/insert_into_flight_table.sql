@@ -1,11 +1,14 @@
-insert into 
-	flight 
+-- use flight_repository;
+use hibernate_tutorial_db;
+
+insert into
+	flight
 		(
-			flight_no, 
-            departure_date, 
-            departure_airport_code, 
-            arrival_date, 
-            arrival_airport_code, 
+			flight_no,
+            departure_date,
+            departure_airport_code,
+            arrival_date,
+            arrival_airport_code,
             aircraft_id,
 			status
 		)

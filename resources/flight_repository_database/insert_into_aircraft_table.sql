@@ -1,8 +1,11 @@
-insert into 
+-- use flight_repository;
+use hibernate_tutorial_db;
+
+insert into
 	aircraft (
 				model
 			 )
-values 
+values
 	(
 		'Боинг 777-300'
 	),

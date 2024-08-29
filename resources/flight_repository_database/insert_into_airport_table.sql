@@ -1,0 +1,31 @@
+-- use flight_repository;
+use hibernate_tutorial_db;
+
+
+insert into
+	airport (
+				code,
+				country,
+                city
+			)
+values
+	(
+		'MNK',
+        'Беларусь',
+        'Минск'
+	),
+	(
+		'LDN',
+        'Англия',
+        'Лондон'
+	),
+    (
+		'MSK',
+        'Россия',
+        'Москва'
+	),
+    (
+		'BSL',
+        'Испания',
+        'Барселона'
+	);

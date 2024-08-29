@@ -1,12 +1,16 @@
-INSERT INTO 
+-- use flight_repository;
+use hibernate_tutorial_db;
+
+
+INSERT INTO
 	seat (
-			aircraft_id, 
+			aircraft_id,
             seat_no
 		)
-SELECT 
-	a.id, 
+SELECT
+	a.id,
     s.seat_no
-FROM 
+FROM
 	aircraft a
 CROSS JOIN (
     SELECT 'A1' AS seat_no
