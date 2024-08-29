@@ -136,3 +136,81 @@ public class PropertiesUtil {
 
 ### Краткое резюме:
 Этот код использует загрузчик классов для поиска файла `application.properties` в пути классов. Если файл найден, он возвращается в виде потока ввода, который затем можно использовать для загрузки конфигурации в объект `Properties`. Это обычная практика для работы с конфигурационными файлами, размещенными в ресурсах приложения.
+
+
+---
+
+
+`ResultSet` в JDBC (Java Database Connectivity) представляет собой интерфейс, который используется для работы с результатами выполнения SQL-запросов. При создании `Statement` или `PreparedStatement`, который будет возвращать `ResultSet`, вы можете указать два важных параметра:
+
+1. **Тип `ResultSet` (`ResultSet Type`)**
+2. **Параллелизм `ResultSet` (`ResultSet Concurrency`)**
+
+### 1. Тип `ResultSet` (`ResultSet Type`)
+
+Тип `ResultSet` определяет, как вы можете перемещаться по строкам и какие строки доступны.
+
+- **`TYPE_FORWARD_ONLY`**: Этот тип `ResultSet` позволяет перемещаться только вперед. Это самый простой и наименее ресурсозатратный тип.
+
+- **`TYPE_SCROLL_INSENSITIVE`**: Этот тип `ResultSet` позволяет перемещаться как вперед, так и назад, и вы можете получать доступ к любой строке в любом порядке. Однако, изменения в базе данных, сделанные после получения `ResultSet`, не будут видны (он "нечувствителен" к изменениям).
+
+- **`TYPE_SCROLL_SENSITIVE`**: Этот тип `ResultSet` также позволяет перемещаться вперед и назад, но в отличие от `TYPE_SCROLL_INSENSITIVE`, он "чувствителен" к изменениям в базе данных. Если данные в базе изменятся после получения `ResultSet`, эти изменения будут видны в `ResultSet`.
+
+### 2. Параллелизм `ResultSet` (`ResultSet Concurrency`)
+
+Параллелизм определяет, как можно изменять данные в `ResultSet`.
+
+- **`CONCUR_READ_ONLY`**: Этот `ResultSet` только для чтения. Вы не можете изменять данные в `ResultSet`. Это наиболее распространенный и безопасный вариант.
+
+- **`CONCUR_UPDATABLE`**: Этот `ResultSet` позволяет изменять данные. Вы можете обновлять, вставлять или удалять строки через `ResultSet`.
+
+### Пример создания `ResultSet` с указанием типа и параллелизма
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class ResultSetExample {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/your_database";
+        String user = "your_username";
+        String password = "your_password";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             Statement statement = connection.createStatement(
+                     ResultSet.TYPE_SCROLL_INSENSITIVE,
+                     ResultSet.CONCUR_UPDATABLE)) {
+
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM authors");
+
+            // Пример перемещения по `ResultSet`
+            if (resultSet.next()) {
+                System.out.println("First row: " + resultSet.getString("first_name"));
+            }
+
+            // Пример обновления строки через `ResultSet`
+            resultSet.updateString("first_name", "Updated Name");
+            resultSet.updateRow();
+
+            // Перемещение к последней строке
+            if (resultSet.last()) {
+                System.out.println("Last row: " + resultSet.getString("first_name"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Объяснение:
+
+- **`ResultSet.TYPE_SCROLL_INSENSITIVE`**: Позволяет вам перемещаться вперед и назад по строкам, но не чувствителен к изменениям, внесенным в базу данных после выполнения запроса.
+
+- **`ResultSet.CONCUR_UPDATABLE`**: Позволяет вам изменять строки в `ResultSet`. В примере выше это демонстрируется с помощью `updateString` и `updateRow`.
+
+Этот код показывает, как можно работать с `ResultSet`, указывая его тип и параллелизм, чтобы обеспечить нужную функциональность при взаимодействии с результатами SQL-запросов.
