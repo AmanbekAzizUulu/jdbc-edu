@@ -13,15 +13,28 @@ public class Main {
 			System.out.println("\033[0;32mConnection established successfully!\033[0m");
 			Statement statement = connection.createStatement();
 
-			String insert_into_authors_table ="""
-					INSERT INTO authors
-					    (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
-					VALUES
-					    ( 'Leo', 'Tolstoy', '1828-09-09', '1910-11-20', 'Russian', 'Russian writer known for War and Peace and Anna Karenina.', 'leo.tolstoy@example.com', 'http://tolstoy.com', 'Male', 'tolstoy.jpg'),
-					    ('Jane', 'Austen', '1775-12-16', '1817-07-18', 'British', 'English novelist known primarily for her six major novels.', 'jane.austen@example.com', 'http://austen.com', 'Female', 'austen.jpg');
+			// к сожалению множественный запрос в базу данных mysql через execute() не будет работать
+			// поэтому мне пришлось разбить каждый запрос на отдельные единицы (подробнее читай в README.md файле)
+			String insert_into_authors_table_1 = "USE literature;";
+			String insert_into_authors_table_2 =
+					"""
+							INSERT INTO authors
+					       	    (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
+					      	VALUES
+					           ('Mark', 'Twain', '1835-11-30', '1910-04-21', 'American', 'American writer known for The Adventures of Tom Sawyer and Adventures of Huckleberry Finn.', 'mark.twain@example.com', 'http://twain.com', 'Male', 'twain.jpg');
 					""";
-			statement.execute(insert_into_authors_table);
 
+			String insert_into_authors_table_3 =
+					"""
+							INSERT INTO authors
+					           (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture)
+					       	VALUES
+					           ('Virginia', 'Woolf', '1882-01-25', '1941-03-28', 'British', 'English writer known for Mrs Dalloway and To the Lighthouse.', 'virginia.woolf@example.com', 'http://woolf.com', 'Female', 'woolf.jpg'),
+					           ('Gabriel', 'Garcia Marquez', '1927-03-06', '2014-04-17', 'Colombian', 'Colombian novelist known for One Hundred Years of Solitude.', 'gabriel.garcia@example.com', 'http://garcia-marquez.com', 'Male', 'garcia.jpg');
+					""";
+			statement.execute(insert_into_authors_table_1);
+			statement.execute(insert_into_authors_table_2);
+			statement.execute(insert_into_authors_table_3);
 
 		} catch (SQLException e) {
 			e.printStackTrace();

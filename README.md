@@ -136,3 +136,74 @@ public class PropertiesUtil {
 
 ### Краткое резюме:
 Этот код использует загрузчик классов для поиска файла `application.properties` в пути классов. Если файл найден, он возвращается в виде потока ввода, который затем можно использовать для загрузки конфигурации в объект `Properties`. Это обычная практика для работы с конфигурационными файлами, размещенными в ресурсах приложения.
+
+
+---
+
+В PostgreSQL, возможность выполнения нескольких SQL-команд в одном запросе более гибкая по сравнению с MySQL. Вот основные причины, почему ваш код работает в PostgreSQL, но вызывает ошибку в MySQL:
+
+1. **Множественные SQL-команды**: PostgreSQL поддерживает выполнение нескольких SQL-команд в одном запросе, если команды разделены точкой с запятой. Это позволяет выполнять такие запросы как `USE database_name; INSERT INTO ...; INSERT INTO ...;`. Однако в MySQL такая возможность по умолчанию может быть ограничена, и выполнение нескольких команд может требовать настройки или дополнительных методов.
+
+2. **Управление транзакциями**: PostgreSQL поддерживает выполнение нескольких SQL-команд в одной транзакции и может автоматически обрабатывать такие команды, как `BEGIN`, `COMMIT`, и `ROLLBACK`. В MySQL вы можете столкнуться с проблемами, если выполняете несколько команд в одном вызове `execute()`, потому что они могут требовать явного управления транзакциями.
+
+3. **Разные уровни SQL-движков**: PostgreSQL и MySQL имеют разные уровни поддержки стандартов SQL и различные особенности реализации. То, что работает в одном СУБД, не всегда будет работать в другой без модификации.
+
+### Почему это важно для вашего случая
+
+- **Разделение команд**: Чтобы обеспечить совместимость с MySQL, лучше выполнять каждую команду по отдельности. Это позволит избежать проблем с синтаксисом и транзакциями, которые могут возникнуть при попытке выполнить несколько команд в одном вызове.
+
+- **Проверка на ошибки**: MySQL и PostgreSQL могут обрабатывать ошибки SQL по-разному. В PostgreSQL более прощен к множественным запросам, тогда как MySQL может потребовать явного управления запросами.
+
+### Рекомендация
+
+Для совместимости с MySQL всегда разделяйте SQL-команды и выполняйте их по отдельности, как это сделано в исправленном коде выше. Это сделает ваш код более переносимым и надежным при работе с различными базами данных.
+
+
+---
+
+Ваша ошибка `java.sql.SQLSyntaxErrorException` указывает на проблему в SQL-синтаксисе. В вашем коде ошибка вызвана использованием нескольких SQL-команд в одном строковом литерале, что может быть проблематичным при выполнении SQL в Java.
+
+Давайте разберем основные проблемы и предложим исправление:
+
+1. **Множественные SQL-команды в одном запросе**: MySQL может не поддерживать выполнение нескольких SQL-команд через один вызов `Statement.execute()`. Для этого лучше использовать отдельные запросы для каждой операции.
+
+2. **Неудачный формат многострочных строк**: Вы используете текстовый блок (многострочные строки) в Java, но для выполнения нескольких SQL-команд их лучше разделять на отдельные строки и выполнить каждую команду отдельно.
+
+Вот как можно переписать ваш код, чтобы избежать ошибки:
+
+```java
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class Main {
+    public static void main(String[] args) {
+        try (Connection connection = ConnectionManager.open()) {
+            System.out.println("\033[0;32mConnection established successfully!\033[0m");
+            Statement statement = connection.createStatement();
+
+            // Выбор базы данных
+            statement.execute("USE literature");
+
+            // Вставка данных
+            statement.execute("INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture) " +
+                    "VALUES ('Mark', 'Twain', '1835-11-30', '1910-04-21', 'American', 'American writer known for The Adventures of Tom Sawyer and Adventures of Huckleberry Finn.', 'mark.twain@example.com', 'http://twain.com', 'Male', 'twain.jpg')");
+
+            statement.execute("INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture) " +
+                    "VALUES ('Virginia', 'Woolf', '1882-01-25', '1941-03-28', 'British', 'English writer known for Mrs Dalloway and To the Lighthouse.', 'virginia.woolf@example.com', 'http://woolf.com', 'Female', 'woolf.jpg')");
+
+            statement.execute("INSERT INTO authors (first_name, last_name, date_of_birth, date_of_death, nationality, biography, email, website, gender, profile_picture) " +
+                    "VALUES ('Gabriel', 'Garcia Marquez', '1927-03-06', '2014-04-17', 'Colombian', 'Colombian novelist known for One Hundred Years of Solitude.', 'gabriel.garcia@example.com', 'http://garcia-marquez.com', 'Male', 'garcia.jpg')");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+В этом коде:
+- Я разделил команды `INSERT` на несколько вызовов `statement.execute()`.
+- Убедился, что `USE literature;` выполняется отдельно перед выполнением команд `INSERT`.
+
+Таким образом, код будет корректно исполнять SQL-команды и не вызовет ошибку синтаксиса.
