@@ -136,3 +136,58 @@ public class PropertiesUtil {
 
 ### Краткое резюме:
 Этот код использует загрузчик классов для поиска файла `application.properties` в пути классов. Если файл найден, он возвращается в виде потока ввода, который затем можно использовать для загрузки конфигурации в объект `Properties`. Это обычная практика для работы с конфигурационными файлами, размещенными в ресурсах приложения.
+
+
+---
+
+
+Для избежания SQL-инъекций в JDBC не рекомендуется использовать методы, которые позволяют напрямую вставлять пользовательский ввод в SQL-запросы. Основные методы, которых следует избегать:
+
+### 1. **Statement.executeQuery() и Statement.executeUpdate()**
+   - Эти методы позволяют выполнять SQL-запросы, создавая строку запроса, которая включает в себя пользовательский ввод напрямую. Это делает их уязвимыми для SQL-инъекций, если пользовательский ввод не экранирован или не проверен должным образом.
+   - **Пример опасного использования:**
+     ```java
+     Statement statement = connection.createStatement();
+     String query = "SELECT * FROM users WHERE username = '" + userInput + "' AND password = '" + passwordInput + "'";
+     ResultSet resultSet = statement.executeQuery(query);
+     ```
+   - В этом примере злоумышленник может вставить SQL-код в переменные `userInput` или `passwordInput`, что приведет к SQL-инъекции.
+
+### 2. **Statement.execute()**
+   - Метод `execute()` также позволяет выполнять любые SQL-запросы, включая `SELECT`, `INSERT`, `UPDATE`, `DELETE`, и т.д. Если запрос создается с использованием строковой конкатенации и пользовательского ввода, то это представляет аналогичный риск SQL-инъекции.
+   - **Пример опасного использования:**
+     ```java
+     Statement statement = connection.createStatement();
+     String query = "DELETE FROM users WHERE user_id = " + userInput;
+     statement.execute(query);
+     ```
+   - Если `userInput` содержит вредоносный код, то это может привести к удалению всех пользователей или другим нежелательным последствиям.
+
+### 3. **Statement.addBatch()**
+   - Метод `addBatch()` позволяет добавлять несколько SQL-команд в пакет для последующего выполнения. Если SQL-команды в пакете формируются с использованием строковой конкатенации и пользовательского ввода, то это также создает риск SQL-инъекций.
+   - **Пример опасного использования:**
+     ```java
+     Statement statement = connection.createStatement();
+     String query1 = "INSERT INTO users (username, password) VALUES ('" + userInput1 + "', '" + passwordInput1 + "')";
+     String query2 = "INSERT INTO users (username, password) VALUES ('" + userInput2 + "', '" + passwordInput2 + "')";
+     statement.addBatch(query1);
+     statement.addBatch(query2);
+     statement.executeBatch();
+     ```
+   - Если пользовательский ввод содержит вредоносный SQL-код, то это может привести к выполнению непредусмотренных запросов.
+
+### **Что использовать вместо этого:**
+
+Для предотвращения SQL-инъекций, рекомендуется использовать **подготовленные выражения (Prepared Statements)**, которые надежно обрабатывают пользовательский ввод и защищают от подобных атак. Подготовленные выражения автоматически экранируют ввод, гарантируя, что он будет интерпретирован как данные, а не как SQL-код.
+
+**Пример безопасного использования PreparedStatement:**
+
+```java
+String query = "SELECT * FROM users WHERE username = ? AND password = ?";
+PreparedStatement preparedStatement = connection.prepareStatement(query);
+preparedStatement.setString(1, userInput);
+preparedStatement.setString(2, passwordInput);
+ResultSet resultSet = preparedStatement.executeQuery();
+```
+
+В этом примере пользовательский ввод `userInput` и `passwordInput` передается в запрос как параметры, что исключает возможность SQL-инъекции.
