@@ -4,6 +4,9 @@ CREATE DATABASE flight_repository;
 --         code (уникальный код аэропорта)
 --              country (страна)
 --                      city (город)
+
+USE flight_repository;
+
 CREATE TABLE airport
 (
     code CHAR(3) PRIMARY KEY,

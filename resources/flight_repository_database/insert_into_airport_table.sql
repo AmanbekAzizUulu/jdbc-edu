@@ -1,27 +1,29 @@
-insert into 
+USE flight_repository;
+
+insert into
 	airport (
-				code, 
-				country, 
+				code,
+				country,
                 city
 			)
-values 
+values
 	(
-		'MNK', 
-        'Беларусь', 
+		'MNK',
+        'Беларусь',
         'Минск'
 	),
 	(
-		'LDN', 
-        'Англия', 
+		'LDN',
+        'Англия',
         'Лондон'
 	),
     (
-		'MSK', 
-        'Россия', 
+		'MSK',
+        'Россия',
         'Москва'
 	),
     (
-		'BSL', 
-        'Испания', 
+		'BSL',
+        'Испания',
         'Барселона'
 	);

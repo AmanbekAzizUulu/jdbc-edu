@@ -1,12 +1,14 @@
-INSERT INTO 
+USE flight_repository;
+
+INSERT INTO
 	seat (
-			aircraft_id, 
+			aircraft_id,
             seat_no
 		)
-SELECT 
-	a.id, 
+SELECT
+	a.id,
     s.seat_no
-FROM 
+FROM
 	aircraft a
 CROSS JOIN (
     SELECT 'A1' AS seat_no

@@ -1,12 +1,14 @@
-insert into 
+USE flight_repository;
+
+insert into
 	ticket (
-				passenger_no, 
-                passenger_name, 
-                flight_id, 
-                seat_no, 
+				passenger_no,
+                passenger_name,
+                flight_id,
+                seat_no,
                 cost
 			)
-values 
+values
 	('112233', 'Иван Иванов', 1, 'A1', 200),
 	('23234A', 'Петр Петров', 1, 'B1', 180),
 	('SS988D', 'Светлана Светикова', 1, 'B2', 175),

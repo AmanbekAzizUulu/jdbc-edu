@@ -1,8 +1,10 @@
-insert into 
+USE flight_repository;
+
+insert into
 	aircraft (
 				model
 			 )
-values 
+values
 	(
 		'Боинг 777-300'
 	),

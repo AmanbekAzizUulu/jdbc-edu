@@ -1,11 +1,13 @@
-insert into 
-	flight 
+USE flight_repository;
+
+insert into
+	flight
 		(
-			flight_no, 
-            departure_date, 
-            departure_airport_code, 
-            arrival_date, 
-            arrival_airport_code, 
+			flight_no,
+            departure_date,
+            departure_airport_code,
+            arrival_date,
+            arrival_airport_code,
             aircraft_id,
 			status
 		)
