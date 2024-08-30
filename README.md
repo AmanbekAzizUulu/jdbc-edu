@@ -140,6 +140,74 @@ public class PropertiesUtil {
 
 ---
 
+Этот код небезопасен, потому что он уязвим для SQL-инъекций. Давайте рассмотрим подробнее:
+
+### Проблема: Уязвимость к SQL-инъекции
+В коде используется метод `String.formatted()` для вставки значения переменной `flightId` непосредственно в SQL-запрос:
+
+```java
+String select_ticket_by_flight_id = """
+    select
+        id
+    from
+        ticket
+    where
+        flight_id = %s
+""".formatted(flightId);
+```
+
+Если переменная `flightId` содержит вредоносный SQL-код, этот код будет вставлен напрямую в запрос, что может привести к SQL-инъекции. Например, если злоумышленник передаст в `flightId` следующую строку:
+
+```java
+"1 OR 1=1"
+```
+
+То сформированный запрос будет выглядеть так:
+
+```sql
+SELECT id FROM ticket WHERE flight_id = 1 OR 1=1
+```
+
+Этот запрос вернет все строки из таблицы `ticket`, что не является ожидаемым поведением.
+
+### Безопасное решение: Использование PreparedStatement
+Чтобы избежать SQL-инъекций, следует использовать подготовленные выражения (`PreparedStatement`). В этом случае параметры запроса передаются отдельно от самого SQL-кода, что предотвращает возможность их интерпретации как SQL-команды.
+
+Вот как можно переписать ваш код, используя `PreparedStatement`:
+
+```java
+private static List<Long> getTicketsByFlightId(String flightId) throws SQLException {
+    List<Long> selectedId = new ArrayList<Long>();
+    String select_ticket_by_flight_id = """
+        select
+            id
+        from
+            ticket
+        where
+            flight_id = ?
+    """;
+    try (Connection connection = ConnectionManager.open();
+         PreparedStatement preparedStatement = connection.prepareStatement(select_ticket_by_flight_id)) {
+        preparedStatement.setString(1, flightId); // Устанавливаем значение flightId как параметр
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        while (resultSet.next()) {
+            selectedId.add(resultSet.getObject(1, Long.class)); // На случай, если resultSet будет содержать null
+        }
+    }
+    return selectedId;
+}
+```
+
+### Почему это решение безопасно:
+1. **Параметризованный запрос:** Значение `flightId` передается в запрос как параметр, и база данных гарантирует, что оно будет интерпретироваться как строковое значение, а не как часть SQL-кода.
+
+2. **Защита от SQL-инъекций:** Даже если злоумышленник попытается передать вредоносный код в `flightId`, он будет интерпретирован как обычная строка, что предотвращает SQL-инъекцию.
+
+Таким образом, использование `PreparedStatement` вместо конкатенации строк для создания SQL-запросов делает ваш код более безопасным и устойчивым к атакам SQL-инъекций.
+
+---
+
 
 Для избежания SQL-инъекций в JDBC не рекомендуется использовать методы, которые позволяют напрямую вставлять пользовательский ввод в SQL-запросы. Основные методы, которых следует избегать:
 
@@ -191,3 +259,75 @@ ResultSet resultSet = preparedStatement.executeQuery();
 ```
 
 В этом примере пользовательский ввод `userInput` и `passwordInput` передается в запрос как параметры, что исключает возможность SQL-инъекции.
+
+---
+
+Верно, методы `execute`, `executeQuery`, и `executeUpdate` для `PreparedStatement` не принимают SQL-запрос в качестве параметра, потому что SQL-запрос уже был передан в `PreparedStatement` при его создании. Вот как работают эти методы:
+
+### Методы `PreparedStatement`
+
+1. **`executeQuery()`**
+   - Выполняет SQL-запрос, который возвращает результат в виде `ResultSet` (например, SELECT-запросы).
+   - Не принимает SQL-запроса как параметра.
+   - **Пример:**
+     ```java
+     String sql = "SELECT * FROM users WHERE username = ?";
+     PreparedStatement preparedStatement = connection.prepareStatement(sql);
+     preparedStatement.setString(1, "john_doe");
+     ResultSet resultSet = preparedStatement.executeQuery();
+     ```
+
+2. **`executeUpdate()`**
+   - Выполняет SQL-запрос, который изменяет данные в базе данных (например, INSERT, UPDATE, DELETE). Возвращает количество затронутых строк.
+   - Не принимает SQL-запроса как параметра.
+   - **Пример:**
+     ```java
+     String sql = "UPDATE users SET password = ? WHERE username = ?";
+     PreparedStatement preparedStatement = connection.prepareStatement(sql);
+     preparedStatement.setString(1, "new_password");
+     preparedStatement.setString(2, "john_doe");
+     int affectedRows = preparedStatement.executeUpdate();
+     ```
+
+3. **`execute()`**
+   - Выполняет SQL-запрос, который может возвращать результат (например, SELECT-запрос) или не возвращать результат (например, INSERT, UPDATE, DELETE). Возвращает `true` если первый результат — это `ResultSet`, и `false` если первый результат — это обновленное количество строк.
+   - Не принимает SQL-запроса как параметра.
+   - **Пример:**
+     ```java
+     String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+     PreparedStatement preparedStatement = connection.prepareStatement(sql);
+     preparedStatement.setString(1, "john_doe");
+     preparedStatement.setString(2, "password123");
+     boolean hasResultSet = preparedStatement.execute();
+     if (hasResultSet) {
+         ResultSet resultSet = preparedStatement.getResultSet();
+         // Обработка результата
+     } else {
+         int affectedRows = preparedStatement.getUpdateCount();
+         // Обработка количества затронутых строк
+     }
+     ```
+
+### Объяснение
+
+1. **`executeQuery()`**:
+   - Этот метод используется для выполнения запросов, которые возвращают данные, таких как SELECT-запросы. Результаты запроса возвращаются в виде объекта `ResultSet`.
+
+2. **`executeUpdate()`**:
+   - Этот метод используется для выполнения SQL-запросов, которые изменяют данные в базе данных, таких как INSERT, UPDATE, DELETE. Он возвращает количество затронутых строк.
+
+3. **`execute()`**:
+   - Этот метод более универсален и может использоваться для выполнения любого SQL-запроса. Он возвращает `true` если результатом выполнения является `ResultSet`, и `false` если результатом является количество затронутых строк.
+
+### Преимущества использования `PreparedStatement`
+
+1. **Безопасность от SQL-инъекций**:
+   - `PreparedStatement` защищает от SQL-инъекций, так как SQL-запрос и его параметры передаются отдельно.
+
+2. **Производительность**:
+   - Использование `PreparedStatement` может улучшить производительность, так как база данных может оптимизировать выполнение подготовленных запросов и повторно использовать их планы выполнения.
+
+3. **Читаемость и поддерживаемость**:
+   - Код становится более читаемым и поддерживаемым, поскольку параметры устанавливаются через методы `setXXX` вместо динамического формирования строк SQL-запросов.
+
+Использование `PreparedStatement` является хорошей практикой в JDBC для безопасного и эффективного выполнения SQL-запросов.
