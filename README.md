@@ -203,3 +203,68 @@ public class JDBCTableExample {
 - **Второй параметр** для схемы (`null`) можно оставить пустым, так как в MySQL нет схем.
 
 Этот код корректно работает в MySQL и вернет список всех таблиц из указанной базы данных.
+
+---
+
+В MySQL нет строгого разделения на схемы, как это сделано в других СУБД. Вместо схем используется концепция каталогов, которые в MySQL соответствуют базам данных. Поэтому при работе с MySQL вам следует использовать каталог (`catalog`) вместо схемы (`schema`).
+
+Если вы пытаетесь получить список схем в MySQL, код `getString("TABLE_SCHEM")` не будет работать, потому что в MySQL схемы отсутствуют. Вместо этого вам следует использовать `getCatalogs()` для получения списка баз данных, а метод `getTables()` для получения таблиц из определенной базы данных.
+
+### Пример получения списка таблиц в MySQL:
+
+```java
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class JDBCTableExample {
+
+    public static void main(String[] args) {
+        String jdbcUrl = "jdbc:mysql://localhost:3306/your_database";
+        String username = "your_username";
+        String password = "your_password";
+
+        Connection connection = null;
+
+        try {
+            // Устанавливаем соединение с базой данных
+            connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+            // Получаем объект DatabaseMetaData
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            // Получаем список таблиц
+            ResultSet tables = metaData.getTables("your_database", null, "%", new String[] { "TABLE" });
+
+            // Перебираем результат и выводим имена таблиц
+            while (tables.next()) {
+                String tableName = tables.getString("TABLE_NAME");
+                System.out.println("Таблица: " + tableName);
+            }
+
+            // Закрываем ResultSet
+            tables.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Закрываем соединение
+            try {
+                if (connection != null && !connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+### Объяснение:
+- **Первый параметр** в методе `getTables` теперь является именем базы данных (каталога), в которой вы хотите получить список таблиц (`"your_database"`).
+- **Второй параметр** для схемы (`null`) можно оставить пустым, так как в MySQL нет схем.
+
+Этот код корректно работает в MySQL и вернет список всех таблиц из указанной базы данных.
