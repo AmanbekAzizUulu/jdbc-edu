@@ -31,6 +31,7 @@ public final class ConnectionManager {
 					PropertiesUtil.get(DATABASE_URL_KEY),
 					PropertiesUtil.get(USER_NAME_KEY),
 					PropertiesUtil.get(PASSWORD_KEY));
+			
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
