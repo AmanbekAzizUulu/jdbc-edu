@@ -42,8 +42,13 @@ public class Main {
 
 		try (Connection connection = ConnectionManager.open();
 				PreparedStatement preparedStatement = connection.prepareStatement(select_flights_between)) {
+
+			preparedStatement.setFetchSize(5);
+			preparedStatement.setQueryTimeout(10);
+			preparedStatement.setMaxRows(5);
+
 			System.out.println(preparedStatement);
-		    preparedStatement.setTimestamp(1, java.sql.Timestamp.valueOf(start));
+			preparedStatement.setTimestamp(1, java.sql.Timestamp.valueOf(start));
 			System.out.println(preparedStatement);
 			preparedStatement.setTimestamp(2, java.sql.Timestamp.valueOf(end));
 			System.out.println(preparedStatement);
