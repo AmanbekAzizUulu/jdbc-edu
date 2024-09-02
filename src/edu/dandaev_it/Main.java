@@ -37,16 +37,31 @@ public class Main {
 		try (Connection connection = ConnectionManager.open();
 				PreparedStatement preparedStatement_1 = connection.prepareStatement(delete_flight_by_id);
 				PreparedStatement preparedStatement_2 = connection.prepareStatement(delete_referenced_ticket);
-				PreparedStatement preparedStatement_3=  connection.prepareStatement(select_all_from_flight_table)) {
+				PreparedStatement preparedStatement_3 = connection.prepareStatement(select_all_from_flight_table)) {
 
-					preparedStatement_1.setLong(1, flight_id);
-					preparedStatement_2.setLong(1, flight_id);
+			// use debugger to better understanding what is happening here
 
-					preparedStatement_1.executeUpdate();
-					ResultSet resultSet = preparedStatement_3.executeQuery();
-					while (resultSet.next()) {
-						System.out.println("id = " + resultSet.getInt(1));
-					}
+			// что бы избежать SQLIntegrityConstraintViolationException, сначала удалим
+			// все строки из таблицы ticket которые ссылаются на id из таблицы flight
+			preparedStatement_2.setLong(1, flight_id);
+			preparedStatement_2.executeUpdate();
+
+
+			// моделирование возникновения ошибки при выполнении запросов
+			// без применения механизма транзакций
+			if (true) {
+				throw new RuntimeException("");
+			}
+
+			// после удаления всех строк из таблицы ticket, которые ссылются на строки
+			// с соответствующим id из таблицы flight, удаляться строки из таблицы flight
+			preparedStatement_1.setLong(1, flight_id);
+			preparedStatement_1.executeUpdate();
+
+			ResultSet resultSet = preparedStatement_3.executeQuery();
+			while (resultSet.next()) {
+				System.out.println("id = " + resultSet.getInt(1));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
