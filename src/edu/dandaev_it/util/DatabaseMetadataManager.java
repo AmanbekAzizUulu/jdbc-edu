@@ -10,8 +10,8 @@ public final class DatabaseMetadataManager {
 	private DatabaseMetadataManager() {
 	}
 
-	public static void checkMetaDate() throws SQLException {
-		try (Connection connection = ConnectionManager.open()) {
+	public static void checkMetaData() throws SQLException {
+		try (Connection connection = ConnectionManager.get()) {
 
 			DatabaseMetaData databaseMetaData = connection.getMetaData();
 
