@@ -6,7 +6,7 @@ public class Ticket {
 	private Long ticketId;
 	private String passengerNo;
 	private String passengerFullName;
-	private Long flightId;
+	private Flight flight;
 	private String seatNo;
 	private BigDecimal cost;
 
@@ -34,12 +34,12 @@ public class Ticket {
 		this.passengerFullName = passengerFullName;
 	}
 
-	public Long getFlightId() {
-		return flightId;
+	public Flight getFlight() {
+		return flight;
 	}
 
-	public void setFlightId(Long flightId) {
-		this.flightId = flightId;
+	public void setFlight(Flight flight) {
+		this.flight = flight;
 	}
 
 	public String getSeatNo() {
@@ -58,20 +58,20 @@ public class Ticket {
 		this.cost = cost;
 	}
 
-	public Ticket(Long ticketId, String passengerNo, String passengerFullName, Long flightId, String seatNo,
+	public Ticket(Long ticketId, String passengerNo, String passengerFullName, Flight flight, String seatNo,
 			BigDecimal cost) {
 		this.ticketId = ticketId;
 		this.passengerNo = passengerNo;
 		this.passengerFullName = passengerFullName;
-		this.flightId = flightId;
+		this.flight = flight;
 		this.seatNo = seatNo;
 		this.cost = cost;
 	}
 
-	public Ticket(String passengerNo, String passengerFullName, Long flightId, String seatNo, BigDecimal cost) {
+	public Ticket(String passengerNo, String passengerFullName, Flight flight, String seatNo, BigDecimal cost) {
 		this.passengerNo = passengerNo;
 		this.passengerFullName = passengerFullName;
-		this.flightId = flightId;
+		this.flight = flight;
 		this.seatNo = seatNo;
 		this.cost = cost;
 	}
@@ -82,11 +82,11 @@ public class Ticket {
 	@Override
 	public String toString() {
 		return "Ticket {" +
-				"\n\tticketId: " + ticketId +
-				"\n\tpassengerNo: " + passengerNo +
-				"\n\tpassengerFullName: " + passengerFullName +
-				"\n\tflightId: " + flightId +
-				"\n\tseatNo: " + seatNo +
+				"\n\tticket_id: " + ticketId +
+				"\n\tpassenger_no: " + passengerNo +
+				"\n\tpassenger_full_name: " + passengerFullName +
+				"\n\t" + flight +
+				"\n\tseat_no: " + seatNo +
 				"\n\tcost: " + cost +
 				"\n}";
 	}

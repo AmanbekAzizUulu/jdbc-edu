@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -11,12 +12,14 @@ import java.util.List;
 import java.util.Optional;
 
 import edu.dandaev_it.dto.TicketFilter;
+import edu.dandaev_it.entity.Flight;
 import edu.dandaev_it.entity.Ticket;
 import edu.dandaev_it.exceptions.DAOException;
 import edu.dandaev_it.util.ConnectionManager;
 
-public class TicketDAO {
+public class TicketDAO implements DAO<Long, Ticket> {
 	private static final TicketDAO INSTANCE = new TicketDAO();
+	private final FlightDAO flightDAO = FlightDAO.getInstance();
 
 	private static final String DELETE_TICKET_BY_ID = """
 			delete
@@ -94,6 +97,31 @@ public class TicketDAO {
 			    ticket
 			limit ? offset ? ;
 			""";
+	private static final String SELECT_ALL_JOIN_FLIGHT_TABLE = """
+			select
+				ti.id,
+				ti.passenger_no,
+				ti.passenger_name,
+				ti.flight_id,
+				ti.seat_no,
+				ti.cost,
+				fl.id,
+				fl.flight_no,
+				fl.departure_date,
+				fl.departure_airport_code,
+				fl.arrival_date,
+				fl.arrival_airport_code,
+				fl.aircraft_id,
+				fl.status
+			from
+				ticket as ti
+			left join
+				flight as fl
+				on
+					ti.flight_id = fl.id
+			where
+				ti.id = ?;
+			""";
 
 	private TicketDAO() {
 	}
@@ -117,7 +145,8 @@ public class TicketDAO {
 		}
 
 		// Формируем часть WHERE только если есть фильтры
-		// String _where = filterConditions.isEmpty() ? "" : " where " + String.join(" and ", filterConditions);
+		// String _where = filterConditions.isEmpty() ? "" : " where " + String.join("
+		// and ", filterConditions);
 
 		// Полный SQL запрос с LIMIT и OFFSET
 		// String select_all_with_condition = SELECT_ALL + _where + " limit ? offset ?";
@@ -140,12 +169,7 @@ public class TicketDAO {
 			var selectedRows = preparedStatement.executeQuery();
 			List<Ticket> tickets = new ArrayList<Ticket>();
 			while (selectedRows.next()) {
-				tickets.add(new Ticket(selectedRows.getLong(1),
-						selectedRows.getString(2),
-						selectedRows.getString(3),
-						selectedRows.getLong(4),
-						selectedRows.getString(5),
-						selectedRows.getBigDecimal(6)));
+				buildTicket(selectedRows);
 			}
 
 			return tickets;
@@ -154,6 +178,7 @@ public class TicketDAO {
 		}
 	}
 
+	@Override
 	public List<Ticket> selectAll() {
 		try (var connection = ConnectionManager.get();
 				var preparedStatement = connection.prepareStatement(SELECT_ALL)) {
@@ -162,15 +187,7 @@ public class TicketDAO {
 			var selectedTickets = preparedStatement.executeQuery();
 
 			while (selectedTickets.next()) {
-				var ticketHolder = new Ticket();
-
-				ticketHolder.setTicketId(selectedTickets.getLong(1));
-				ticketHolder.setPassengerNo(selectedTickets.getString(2));
-				ticketHolder.setPassengerFullName(selectedTickets.getString(3));
-				ticketHolder.setFlightId(selectedTickets.getLong(4));
-				ticketHolder.setSeatNo(selectedTickets.getString(5));
-				ticketHolder.setCost(selectedTickets.getBigDecimal(6));
-
+				var ticketHolder = buildTicket(selectedTickets);
 				tickets.add(ticketHolder);
 			}
 			return tickets;
@@ -179,6 +196,7 @@ public class TicketDAO {
 		}
 	}
 
+	@Override
 	public Optional<Ticket> select(Long ticketID) {
 		try (var connection = ConnectionManager.get();
 				var preparedStatement = connection.prepareStatement(SELECT_BY_ID)) {
@@ -187,12 +205,7 @@ public class TicketDAO {
 			var selectedTicket = preparedStatement.executeQuery();
 			Ticket ticket = null;
 			if (selectedTicket.next()) {
-				ticket = new Ticket(selectedTicket.getLong(1),
-						selectedTicket.getString(2),
-						selectedTicket.getString(3),
-						selectedTicket.getLong(4),
-						selectedTicket.getString(5),
-						selectedTicket.getBigDecimal(6));
+				ticket = buildTicket(selectedTicket);
 			}
 			return Optional.ofNullable(ticket);
 		} catch (SQLException e) {
@@ -200,13 +213,30 @@ public class TicketDAO {
 		}
 	}
 
+	public Optional<Ticket> selectWithJoin(Long ticketID) {
+		try (var connection = ConnectionManager.get();
+				var preparedStatement = connection.prepareStatement(SELECT_ALL_JOIN_FLIGHT_TABLE)) {
+			preparedStatement.setLong(1, ticketID);
+
+			var selectedTicket = preparedStatement.executeQuery();
+			Ticket ticket = null;
+			if (selectedTicket.next()) {
+				ticket = buildTicket(selectedTicket);
+			}
+			return Optional.ofNullable(ticket);
+		} catch (SQLException e) {
+			throw new DAOException(e);
+		}
+	}
+
+	@Override
 	public void update(Ticket ticket) {
 		try (var connection = ConnectionManager.get();
 				var preparedStatement = connection.prepareStatement(UPDATE_ROW_IN_TICKET_TABLE)) {
 
 			preparedStatement.setString(1, ticket.getPassengerNo());
 			preparedStatement.setString(2, ticket.getPassengerFullName());
-			preparedStatement.setLong(3, ticket.getFlightId());
+			preparedStatement.setLong(3, ticket.getFlight().flightId());
 			preparedStatement.setString(4, ticket.getSeatNo());
 			preparedStatement.setBigDecimal(5, ticket.getCost());
 			preparedStatement.setLong(6, ticket.getTicketId());
@@ -218,13 +248,14 @@ public class TicketDAO {
 		}
 	}
 
+	@Override
 	public Ticket insert(Ticket ticket) {
 		try (Connection connection = ConnectionManager.get();
 				PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_TICKET_TABLE,
 						Statement.RETURN_GENERATED_KEYS)) {
 			preparedStatement.setString(1, ticket.getPassengerNo());
 			preparedStatement.setString(2, ticket.getPassengerFullName());
-			preparedStatement.setLong(3, ticket.getFlightId());
+			preparedStatement.setLong(3, ticket.getFlight().flightId());
 			preparedStatement.setString(4, ticket.getSeatNo());
 			preparedStatement.setBigDecimal(5, ticket.getCost());
 
@@ -242,6 +273,7 @@ public class TicketDAO {
 		}
 	}
 
+	@Override
 	public boolean delete(Long ticketId) {
 		try (Connection connection = ConnectionManager.get();
 				PreparedStatement preparedStatement = connection.prepareStatement(DELETE_TICKET_BY_ID)) {
@@ -250,5 +282,24 @@ public class TicketDAO {
 		} catch (SQLException e) {
 			throw new DAOException(e);
 		}
+	}
+
+	private Ticket buildTicket(ResultSet resultSet) throws SQLException {
+		var flight = new Flight(
+				resultSet.getLong(7),
+				resultSet.getString(8),
+				resultSet.getTimestamp(9).toLocalDateTime(),
+				resultSet.getString(10),
+				resultSet.getTimestamp(11).toLocalDateTime(),
+				resultSet.getString(12),
+				resultSet.getInt(13),
+				resultSet.getString(14));
+
+		return new Ticket(resultSet.getLong(1),
+				resultSet.getString(2),
+				resultSet.getString(3),
+				flight,
+				resultSet.getString(5),
+				resultSet.getBigDecimal(6));
 	}
 }
