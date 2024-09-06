@@ -26,11 +26,11 @@ public class Ticket {
 		this.passengerNo = passengerNo;
 	}
 
-	public String getPassengerFirstName() {
+	public String getPassengerFullName() {
 		return passengerFullName;
 	}
 
-	public void setPassengerFirstName(String passengerFullName) {
+	public void setPassengerFullName(String passengerFullName) {
 		this.passengerFullName = passengerFullName;
 	}
 
@@ -74,6 +74,9 @@ public class Ticket {
 		this.flightId = flightId;
 		this.seatNo = seatNo;
 		this.cost = cost;
+	}
+
+	public Ticket() {
 	}
 
 	@Override
