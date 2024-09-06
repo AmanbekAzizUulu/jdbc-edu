@@ -1,5 +1,7 @@
 package edu.dandaev_it.dao;
 
+import static java.util.stream.Collectors.*;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import edu.dandaev_it.dto.TicketFilter;
 import edu.dandaev_it.entity.Ticket;
 import edu.dandaev_it.exceptions.DAOException;
 import edu.dandaev_it.util.ConnectionManager;
@@ -77,7 +80,19 @@ public class TicketDAO {
 				seat_no,
 				cost
 			from
-				ticket;
+				ticket
+			""";
+	private static final String SELECT_ALL_WITH_FILTER = """
+			select
+			    id,
+			    passenger_no,
+			    passenger_name,
+			    flight_id,
+			    seat_no,
+			    cost
+			from
+			    ticket
+			limit ? offset ? ;
 			""";
 
 	private TicketDAO() {
@@ -87,26 +102,78 @@ public class TicketDAO {
 		return INSTANCE;
 	}
 
+	public List<Ticket> selectAll(TicketFilter filter) {
+		List<Object> parameters = new ArrayList<Object>();
+		List<String> filterConditions = new ArrayList<String>();
+
+		if (filter.seatNo() != null) {
+			filterConditions.add("seat_no like ?");
+			parameters.add("%" + filter.seatNo() + "%");
+		}
+
+		if (filter.passengerFullName() != null) {
+			filterConditions.add("passenger_name = ?");
+			parameters.add(filter.passengerFullName());
+		}
+
+		// Формируем часть WHERE только если есть фильтры
+		// String _where = filterConditions.isEmpty() ? "" : " where " + String.join(" and ", filterConditions);
+
+		// Полный SQL запрос с LIMIT и OFFSET
+		// String select_all_with_condition = SELECT_ALL + _where + " limit ? offset ?";
+
+		parameters.add(filter.limit());
+		parameters.add(filter.offset());
+
+		var _where = filterConditions.stream()
+				.collect(joining(" and ", " where ", " limit ? offset ? "));
+		String select_all_with_condition = SELECT_ALL + _where;
+
+		try (var connection = ConnectionManager.get();
+				var preparedStatement = connection.prepareStatement(select_all_with_condition)) {
+
+			for (int i = 0; i < parameters.size(); i++) {
+				preparedStatement.setObject(i + 1, parameters.get(i));
+			}
+
+			System.out.println(preparedStatement);
+			var selectedRows = preparedStatement.executeQuery();
+			List<Ticket> tickets = new ArrayList<Ticket>();
+			while (selectedRows.next()) {
+				tickets.add(new Ticket(selectedRows.getLong(1),
+						selectedRows.getString(2),
+						selectedRows.getString(3),
+						selectedRows.getLong(4),
+						selectedRows.getString(5),
+						selectedRows.getBigDecimal(6)));
+			}
+
+			return tickets;
+		} catch (SQLException e) {
+			throw new DAOException(e);
+		}
+	}
+
 	public List<Ticket> selectAll() {
 		try (var connection = ConnectionManager.get();
 				var preparedStatement = connection.prepareStatement(SELECT_ALL)) {
 
-				var tickets = new ArrayList<Ticket>();
-				var selectedTickets = preparedStatement.executeQuery();
+			var tickets = new ArrayList<Ticket>();
+			var selectedTickets = preparedStatement.executeQuery();
 
-				while (selectedTickets.next()) {
-					var ticketHolder = new Ticket();
+			while (selectedTickets.next()) {
+				var ticketHolder = new Ticket();
 
-					ticketHolder.setTicketId(selectedTickets.getLong(1));
-					ticketHolder.setPassengerNo(selectedTickets.getString(2));
-					ticketHolder.setPassengerFullName(selectedTickets.getString(3));
-					ticketHolder.setFlightId(selectedTickets.getLong(4));
-					ticketHolder.setSeatNo(selectedTickets.getString(5));
-					ticketHolder.setCost(selectedTickets.getBigDecimal(6));
+				ticketHolder.setTicketId(selectedTickets.getLong(1));
+				ticketHolder.setPassengerNo(selectedTickets.getString(2));
+				ticketHolder.setPassengerFullName(selectedTickets.getString(3));
+				ticketHolder.setFlightId(selectedTickets.getLong(4));
+				ticketHolder.setSeatNo(selectedTickets.getString(5));
+				ticketHolder.setCost(selectedTickets.getBigDecimal(6));
 
-					tickets.add(ticketHolder);
-				}
-				return tickets;
+				tickets.add(ticketHolder);
+			}
+			return tickets;
 		} catch (SQLException e) {
 			throw new DAOException(e);
 		}
