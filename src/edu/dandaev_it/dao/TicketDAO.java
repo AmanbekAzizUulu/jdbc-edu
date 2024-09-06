@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 import edu.dandaev_it.dto.TicketFilter;
-import edu.dandaev_it.entity.Flight;
 import edu.dandaev_it.entity.Ticket;
 import edu.dandaev_it.exceptions.DAOException;
 import edu.dandaev_it.util.ConnectionManager;
@@ -285,20 +284,20 @@ public class TicketDAO implements DAO<Long, Ticket> {
 	}
 
 	private Ticket buildTicket(ResultSet resultSet) throws SQLException {
-		var flight = new Flight(
-				resultSet.getLong(7),
-				resultSet.getString(8),
-				resultSet.getTimestamp(9).toLocalDateTime(),
-				resultSet.getString(10),
-				resultSet.getTimestamp(11).toLocalDateTime(),
-				resultSet.getString(12),
-				resultSet.getInt(13),
-				resultSet.getString(14));
+		// var flight = new Flight(
+		// 		resultSet.getLong(7),
+		// 		resultSet.getString(8),
+		// 		resultSet.getTimestamp(9).toLocalDateTime(),
+		// 		resultSet.getString(10),
+		// 		resultSet.getTimestamp(11).toLocalDateTime(),
+		// 		resultSet.getString(12),
+		// 		resultSet.getInt(13),
+		// 		resultSet.getString(14));
 
 		return new Ticket(resultSet.getLong(1),
 				resultSet.getString(2),
 				resultSet.getString(3),
-				flight,
+				flightDAO.select(resultSet.getLong(4), resultSet.getStatement().getConnection()).orElse(null),
 				resultSet.getString(5),
 				resultSet.getBigDecimal(6));
 	}

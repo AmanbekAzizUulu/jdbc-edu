@@ -44,8 +44,15 @@ public class FlightDAO implements DAO<Long, Flight> {
 
 	@Override
 	public Optional<Flight> select(Long flightId) {
-		try (var connection = ConnectionManager.get();
-				var preparedStatement = connection.prepareStatement(SELECT_BY_ID)) {
+		try (var connection = ConnectionManager.get()) {
+			return select(flightId, connection);
+		} catch (SQLException e) {
+			throw new DAOException(e);
+		}
+	}
+
+	public Optional<Flight> select(Long flightId, Connection connection) {
+		try (var preparedStatement = connection.prepareStatement(SELECT_BY_ID);) {
 			preparedStatement.setLong(1, flightId);
 			var selectedFlight = preparedStatement.executeQuery();
 			Flight flight = null;
